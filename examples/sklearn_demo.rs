@@ -1,0 +1,93 @@
+use mlab_rs::np;
+use mlab_rs::sklearn::{
+    cluster::KMeans,
+    decomposition::PCA,
+    linear_model::{LinearRegression, LogisticRegression},
+    metrics::{accuracy_score, mean_squared_error, r2_score},
+    model_selection::train_test_split,
+    preprocessing::StandardScaler,
+};
+
+fn main() {
+    println!("--- Scikit-Learn Demo ---");
+
+    // 1. Preprocessing and Linear Regression
+    // Let's create some dummy regression data: y = 3 * x + 5 + noise
+    let x = np::array(vec![
+        vec![1.0],
+        vec![2.0],
+        vec![3.0],
+        vec![4.0],
+        vec![5.0],
+        vec![6.0],
+        vec![7.0],
+        vec![8.0],
+    ]);
+    let y = np::array(vec![8.1, 10.9, 14.2, 17.0, 20.1, 22.9, 26.2, 29.0]);
+
+    // Split data
+    let (x_train, x_test, y_train, y_test) = train_test_split(&x, &y, 0.25, false);
+
+    // Fit StandardScaler
+    let mut scaler = StandardScaler::new();
+    let x_train_scaled = scaler.fit_transform(&x_train);
+    let x_test_scaled = scaler.transform(&x_test);
+
+    // Fit LinearRegression
+    let mut reg = LinearRegression::new(true);
+    reg.fit(&x_train_scaled, &y_train).unwrap();
+
+    let preds = reg.predict(&x_test_scaled);
+    println!("Linear Regression coefficients: {:?}", reg.coef);
+    println!("Linear Regression intercept: {:?}", reg.intercept);
+    println!("Predictions on test set: {:?}", preds);
+    println!("True test labels: {:?}", y_test);
+    println!("MSE: {}", mean_squared_error(&y_test, &preds));
+    println!("R2 Score: {}", r2_score(&y_test, &preds));
+    println!();
+
+    // 2. Logistic Regression
+    let x_clf = np::array(vec![
+        vec![0.1],
+        vec![0.25],
+        vec![0.3],
+        vec![0.7],
+        vec![0.85],
+        vec![0.9],
+    ]);
+    let y_clf = np::array(vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0]);
+
+    let mut clf = LogisticRegression::new(1000, 0.1, 1.0);
+    clf.fit(&x_clf, &y_clf);
+    let clf_preds = clf.predict(&x_clf);
+    println!("Logistic Regression Predictions: {:?}", clf_preds);
+    println!("Accuracy Score: {}", accuracy_score(&y_clf, &clf_preds));
+    println!();
+
+    // 3. KMeans Clustering
+    let x_cluster = np::array(vec![
+        vec![1.0, 1.0],
+        vec![1.2, 0.8],
+        vec![10.0, 10.0],
+        vec![9.8, 10.2],
+    ]);
+    let mut kmeans = KMeans::new(2, 100);
+    kmeans.fit(&x_cluster);
+    println!("KMeans Centers:\n{:?}", kmeans.cluster_centers);
+    println!("KMeans Predictions: {:?}", kmeans.predict(&x_cluster));
+    println!();
+
+    // 4. PCA
+    let x_pca = np::array(vec![
+        vec![1.0, 1.0],
+        vec![2.0, 2.0],
+        vec![3.0, 3.0],
+        vec![4.0, 4.0],
+    ]);
+    let mut pca = PCA::new(1);
+    pca.fit(&x_pca).unwrap();
+    let transformed = pca.transform(&x_pca);
+    println!("PCA Components:\n{:?}", pca.components);
+    println!("PCA Explained Variance: {:?}", pca.explained_variance);
+    println!("PCA Transformed Data:\n{:?}", transformed);
+}
