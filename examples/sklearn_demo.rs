@@ -6,6 +6,7 @@ use mlab_rs::sklearn::{
     metrics::{accuracy_score, mean_squared_error, r2_score},
     model_selection::train_test_split,
     preprocessing::StandardScaler,
+    tree::DecisionTreeClassifier,
 };
 
 fn main() {
@@ -102,4 +103,21 @@ fn main() {
     println!("PCA Components:\n{:?}", pca.components);
     println!("PCA Explained Variance: {:?}", pca.explained_variance);
     println!("PCA Transformed Data:\n{:?}", transformed);
+    println!();
+
+    // 5. Decision Tree Classifier
+    let x_tree = np::array(vec![
+        vec![1.0, 1.0],
+        vec![1.5, 1.2],
+        vec![2.0, 2.0],
+        vec![10.0, 10.0],
+        vec![10.5, 9.8],
+        vec![11.0, 11.0],
+    ]);
+    let y_tree = np::array(vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0]);
+    let mut tree_clf = DecisionTreeClassifier::new(3, 2);
+    tree_clf.fit(&x_tree, &y_tree);
+    let tree_preds = tree_clf.predict(&x_tree);
+    println!("Decision Tree Predictions: {:?}", tree_preds);
+    println!("Decision Tree Accuracy: {}", accuracy_score(&y_tree, &tree_preds));
 }

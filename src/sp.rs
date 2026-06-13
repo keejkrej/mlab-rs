@@ -43,6 +43,16 @@ mod tests {
     fn test_stats() {
         let p = stats::Norm::cdf(0.0, 0.0, 1.0);
         assert!((p - 0.5).abs() < 1e-5);
+
+        let x = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let y = Array1::from_vec(vec![2.0, 4.0, 6.0, 8.0, 10.0]);
+        let (r, p_val) = stats::pearsonr(&x, &y).unwrap();
+        assert!((r - 1.0).abs() < 1e-9);
+        assert!(p_val < 0.05);
+
+        let (sr, sp_val) = stats::spearmanr(&x, &y).unwrap();
+        assert!((sr - 1.0).abs() < 1e-9);
+        assert!(sp_val < 0.05);
     }
 
     #[test]

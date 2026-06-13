@@ -4,6 +4,7 @@ pub mod cluster;
 pub mod decomposition;
 pub mod metrics;
 pub mod model_selection;
+pub mod tree;
 
 #[cfg(test)]
 mod tests {
@@ -98,5 +99,24 @@ mod tests {
         assert_eq!(x_test.nrows(), 2);
         assert_eq!(y_train.len(), 3);
         assert_eq!(y_test.len(), 2);
+    }
+
+    #[test]
+    fn test_decision_tree() {
+        let x = array![
+            [1.0, 1.0],
+            [1.0, 2.0],
+            [2.0, 1.0],
+            [10.0, 10.0],
+            [10.0, 11.0],
+            [11.0, 10.0]
+        ];
+        let y = array![0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
+        let mut clf = tree::DecisionTreeClassifier::new(3, 2);
+        clf.fit(&x, &y);
+
+        let preds = clf.predict(&array![[1.5, 1.5], [10.5, 10.5]]);
+        assert_eq!(preds[0], 0.0);
+        assert_eq!(preds[1], 1.0);
     }
 }

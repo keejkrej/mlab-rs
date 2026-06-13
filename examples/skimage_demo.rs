@@ -22,6 +22,11 @@ fn main() {
     let blurred = filters::gaussian(&gray, 1.0);
     println!("Gaussian blurred image:\n{:?}", blurred);
 
+    // Apply Canny edge detection
+    // Python: edges = filters.canny(gray, low_threshold=50.0, high_threshold=150.0)
+    let edges = filters::canny(&gray, 50.0, 150.0);
+    println!("Canny edges:\n{:?}", edges);
+
     // Resize image
     // Python: resized = transform.resize(image, (8, 8))
     let resized = transform::resize(&image, (8, 8));

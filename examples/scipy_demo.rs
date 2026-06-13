@@ -29,6 +29,16 @@ fn main() {
     let p = sp::stats::Norm::cdf(0.0, 0.0, 1.0);
     println!("CDF of standard normal at 0.0: {}\n", p);
 
+    // Correlation demo
+    // Python: r, p_val = scipy.stats.pearsonr(x, y)
+    let x_arr = np::array(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+    let y_arr = np::array(vec![2.0, 4.1, 5.9, 8.0, 10.1]);
+    let (r, p_val) = sp::stats::pearsonr(&x_arr, &y_arr).unwrap();
+    println!("Pearson correlation: r = {}, p-value = {}\n", r, p_val);
+
+    let (sr, s_p_val) = sp::stats::spearmanr(&x_arr, &y_arr).unwrap();
+    println!("Spearman rank correlation: rho = {}, p-value = {}\n", sr, s_p_val);
+
     // Signal convolution
     // Python: out = scipy.signal.convolve(in1, in2, mode='full')
     let in1 = np::array(vec![1.0, 2.0, 3.0]);

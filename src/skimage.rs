@@ -35,6 +35,9 @@ mod tests {
 
         let edges = filters::sobel(&image);
         assert_eq!(edges.dim(), (8, 8));
+
+        let canny_edges = filters::canny(&image, 50.0, 150.0);
+        assert_eq!(canny_edges.dim(), (8, 8));
     }
 
     #[test]
