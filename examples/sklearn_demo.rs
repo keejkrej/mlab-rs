@@ -5,7 +5,8 @@ use mlab_rs::sklearn::{
     linear_model::{LinearRegression, LogisticRegression, Ridge},
     metrics::{accuracy_score, mean_squared_error, r2_score},
     model_selection::train_test_split,
-    preprocessing::StandardScaler,
+    naive_bayes::GaussianNB,
+    preprocessing::{StandardScaler, OneHotEncoder},
     tree::DecisionTreeClassifier,
 };
 
@@ -120,4 +121,41 @@ fn main() {
     let tree_preds = tree_clf.predict(&x_tree);
     println!("Decision Tree Predictions: {:?}", tree_preds);
     println!("Decision Tree Accuracy: {}", accuracy_score(&y_tree, &tree_preds));
+    println!();
+
+    // 6. OneHotEncoder
+    let x_cat = np::array(vec![
+        vec![0.0, 1.0],
+        vec![1.0, 2.0],
+        vec![0.0, 2.0],
+        vec![2.0, 0.0],
+    ]);
+    println!("Original categorical features:\n{:?}", x_cat);
+    let mut encoder = OneHotEncoder::new();
+    let encoded = encoder.fit_transform(&x_cat);
+    println!("One-hot encoded representation:\n{:?}", encoded);
+    println!("Categories per column: {:?}", encoder.categories);
+    println!();
+
+    // 7. Gaussian Naive Bayes Classifier
+    let x_nb = np::array(vec![
+        vec![1.0, 2.0],
+        vec![1.2, 1.8],
+        vec![1.5, 2.2],
+        vec![6.0, 8.0],
+        vec![6.5, 7.5],
+        vec![7.0, 8.5],
+    ]);
+    let y_nb = np::array(vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0]);
+    let mut gnb = GaussianNB::new();
+    gnb.fit(&x_nb, &y_nb);
+
+    let test_nb = np::array(vec![
+        vec![1.1, 1.9],
+        vec![6.8, 8.2],
+    ]);
+    let nb_preds = gnb.predict(&test_nb);
+    println!("Test samples:\n{:?}", test_nb);
+    println!("Gaussian NB Predictions: {:?}", nb_preds);
+    println!();
 }

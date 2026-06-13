@@ -111,3 +111,53 @@ impl MinMaxScaler {
         self.transform(x)
     }
 }
+
+/// OneHotEncoder encodes categorical features as a one-hot numeric array.
+pub struct OneHotEncoder {
+    pub categories: Vec<Vec<f64>>,
+}
+
+impl OneHotEncoder {
+    /// Create a new OneHotEncoder.
+    pub fn new() -> Self {
+        Self { categories: Vec::new() }
+    }
+
+    /// Fit OneHotEncoder to X.
+    pub fn fit(&mut self, x: &Array2<f64>) {
+        let (nrows, ncols) = x.dim();
+        self.categories = Vec::with_capacity(ncols);
+        for col in 0..ncols {
+            let mut unique_vals: Vec<f64> = (0..nrows).map(|r| x[[r, col]]).collect();
+            unique_vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            unique_vals.dedup();
+            self.categories.push(unique_vals);
+        }
+    }
+
+    /// Transform X using one-hot encoding.
+    pub fn transform(&self, x: &Array2<f64>) -> Array2<f64> {
+        let (nrows, ncols) = x.dim();
+        let total_out_cols: usize = self.categories.iter().map(|c| c.len()).sum();
+        let mut out = Array2::zeros((nrows, total_out_cols));
+
+        for r in 0..nrows {
+            let mut current_col = 0;
+            for col in 0..ncols {
+                let val = x[[r, col]];
+                let cat_list = &self.categories[col];
+                let cat_idx = cat_list.iter().position(|&x| x == val).unwrap_or(0);
+                out[[r, current_col + cat_idx]] = 1.0;
+                current_col += cat_list.len();
+            }
+        }
+        out
+    }
+
+    /// Fit to X, then transform it.
+    pub fn fit_transform(&mut self, x: &Array2<f64>) -> Array2<f64> {
+        self.fit(x);
+        self.transform(x)
+    }
+}
+

@@ -27,4 +27,16 @@ fn main() {
     // Python: print(np.mean(e))
     println!("mean(e): {}", np::mean(&e));
     println!("sum(e): {}", np::sum(&e));
+    println!();
+
+    // Python: median_val = np.median(a)
+    let a_ext = np::array(vec![1.0, 5.0, 3.0, 4.0, 2.0]);
+    println!("median(a_ext): {}", np::median(&a_ext));
+
+    // Python: cov_matrix = np.cov(m)
+    let m = np::array(vec![
+        vec![1.0, 2.0, 3.0],
+        vec![2.0, 4.0, 6.0]
+    ]);
+    println!("cov(m):\n{:?}", np::cov(&m).unwrap());
 }

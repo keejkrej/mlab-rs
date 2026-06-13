@@ -5,6 +5,7 @@ pub mod decomposition;
 pub mod metrics;
 pub mod model_selection;
 pub mod tree;
+pub mod naive_bayes;
 
 #[cfg(test)]
 mod tests {
@@ -116,6 +117,38 @@ mod tests {
         clf.fit(&x, &y);
 
         let preds = clf.predict(&array![[1.5, 1.5], [10.5, 10.5]]);
+        assert_eq!(preds[0], 0.0);
+        assert_eq!(preds[1], 1.0);
+    }
+
+    #[test]
+    fn test_one_hot_encoder() {
+        let x = array![
+            [0.0, 1.0],
+            [1.0, 2.0],
+            [0.0, 2.0]
+        ];
+        let mut encoder = preprocessing::OneHotEncoder::new();
+        let encoded = encoder.fit_transform(&x);
+        assert_eq!(encoded.dim(), (3, 4));
+        assert_eq!(encoded[[0, 0]], 1.0);
+        assert_eq!(encoded[[0, 1]], 0.0);
+        assert_eq!(encoded[[0, 2]], 1.0);
+        assert_eq!(encoded[[0, 3]], 0.0);
+    }
+
+    #[test]
+    fn test_gaussian_nb() {
+        let x = array![
+            [1.0, 1.0],
+            [1.2, 0.9],
+            [8.0, 8.0],
+            [8.5, 8.2]
+        ];
+        let y = array![0.0, 0.0, 1.0, 1.0];
+        let mut clf = naive_bayes::GaussianNB::new();
+        clf.fit(&x, &y);
+        let preds = clf.predict(&array![[1.1, 1.0], [8.2, 8.1]]);
         assert_eq!(preds[0], 0.0);
         assert_eq!(preds[1], 1.0);
     }

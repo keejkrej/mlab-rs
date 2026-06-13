@@ -39,6 +39,22 @@ fn main() {
     let (sr, s_p_val) = sp::stats::spearmanr(&x_arr, &y_arr).unwrap();
     println!("Spearman rank correlation: rho = {}, p-value = {}\n", sr, s_p_val);
 
+    // Interpolation demo
+    // Python: f = scipy.interpolate.interp1d(x, y)
+    let interp_x = np::array(vec![0.0, 1.0, 2.0]);
+    let interp_y = np::array(vec![0.0, 10.0, 20.0]);
+    let f = sp::interpolate::Interp1D::new(&interp_x, &interp_y).unwrap();
+    let x_new = np::array(vec![0.5, 1.5]);
+    println!("Interpolated values at [0.5, 1.5]:\n{:?}\n", f.call(&x_new));
+
+    // Digital filter demo (lfilter)
+    // Python: y = scipy.signal.lfilter(b, a, x)
+    let filter_b = np::array(vec![1.0, 0.5]);
+    let filter_a = np::array(vec![1.0, -0.2]);
+    let filter_x = np::array(vec![1.0, 2.0, 3.0]);
+    let filter_y = sp::signal::lfilter(&filter_b, &filter_a, &filter_x).unwrap();
+    println!("Filtered signal (lfilter):\n{:?}\n", filter_y);
+
     // Signal convolution
     // Python: out = scipy.signal.convolve(in1, in2, mode='full')
     let in1 = np::array(vec![1.0, 2.0, 3.0]);

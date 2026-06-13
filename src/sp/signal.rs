@@ -44,3 +44,40 @@ pub fn convolve(in1: &Array1<f64>, in2: &Array1<f64>, mode: ConvolveMode) -> Arr
         }
     }
 }
+
+/// Filter data along one dimension with an IIR or FIR filter using Transposed Direct Form II.
+pub fn lfilter(b: &Array1<f64>, a: &Array1<f64>, x: &Array1<f64>) -> Result<Array1<f64>, String> {
+    if a.len() == 0 || b.len() == 0 {
+        return Err("Filter coefficients a and b must not be empty".to_string());
+    }
+    let a0 = a[0];
+    if a0.abs() < 1e-14 {
+        return Err("First denominator coefficient a[0] must not be zero".to_string());
+    }
+
+    let b_norm: Vec<f64> = b.iter().map(|&x| x / a0).collect();
+    let a_norm: Vec<f64> = a.iter().map(|&x| x / a0).collect();
+
+    let n = x.len();
+    let mut y = Array1::zeros(n);
+
+    let n_b = b_norm.len();
+    let n_a = a_norm.len();
+    let ord = std::cmp::max(n_b, n_a);
+    let mut z = vec![0.0; ord + 1];
+
+    for i in 0..n {
+        let xi = x[i];
+        let yi = b_norm[0] * xi + z[0];
+        y[i] = yi;
+
+        for k in 1..ord {
+            let bk = if k < n_b { b_norm[k] } else { 0.0 };
+            let ak = if k < n_a { a_norm[k] } else { 0.0 };
+            z[k - 1] = bk * xi - ak * yi + z[k];
+        }
+    }
+
+    Ok(y)
+}
+

@@ -2,6 +2,7 @@ pub mod linalg;
 pub mod fft;
 pub mod stats;
 pub mod signal;
+pub mod interpolate;
 
 #[cfg(test)]
 mod tests {
@@ -66,5 +67,27 @@ mod tests {
         assert_eq!(res[2], 2.5);
         assert_eq!(res[3], 4.0);
         assert_eq!(res[4], 1.5);
+
+        // test lfilter
+        let b = Array1::from_vec(vec![1.0, 0.5]);
+        let a = Array1::from_vec(vec![1.0, -0.2]);
+        let x = Array1::from_vec(vec![1.0, 2.0, 3.0]);
+        let y = signal::lfilter(&b, &a, &x).unwrap();
+        assert_eq!(y.len(), 3);
+        assert!((y[0] - 1.0).abs() < 1e-9);
+        assert!((y[1] - 2.7).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_interpolate() {
+        let x = Array1::from_vec(vec![0.0, 1.0, 2.0]);
+        let y = Array1::from_vec(vec![0.0, 10.0, 20.0]);
+        let interp = interpolate::Interp1D::new(&x, &y).unwrap();
+
+        let x_new = Array1::from_vec(vec![0.5, 1.5]);
+        let y_new = interp.call(&x_new);
+        assert_eq!(y_new.len(), 2);
+        assert!((y_new[0] - 5.0).abs() < 1e-9);
+        assert!((y_new[1] - 15.0).abs() < 1e-9);
     }
 }

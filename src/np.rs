@@ -361,6 +361,43 @@ where
     a.dot(b)
 }
 
+/// Compute the median along a 1D array.
+pub fn median(arr: &Array1<f64>) -> f64 {
+    let n = arr.len();
+    if n == 0 {
+        return f64::NAN;
+    }
+    let mut sorted = arr.to_vec();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    if n % 2 == 1 {
+        sorted[n / 2]
+    } else {
+        (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0
+    }
+}
+
+/// Compute covariance matrix of observations.
+pub fn cov(m: &Array2<f64>) -> Result<Array2<f64>, String> {
+    let (nrows, ncols) = m.dim();
+    if ncols <= 1 {
+        return Err("Covariance requires at least 2 observations (columns)".to_string());
+    }
+
+    let row_means = m.mean_axis(Axis(1)).unwrap();
+
+    let mut cov_matrix = Array2::zeros((nrows, nrows));
+    for i in 0..nrows {
+        for k in 0..nrows {
+            let mut sum = 0.0;
+            for j in 0..ncols {
+                sum += (m[[i, j]] - row_means[i]) * (m[[k, j]] - row_means[k]);
+            }
+            cov_matrix[[i, k]] = sum / ((ncols - 1) as f64);
+        }
+    }
+    Ok(cov_matrix)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -408,6 +445,22 @@ mod tests {
         assert_eq!(max(&a), 3.0);
         assert_eq!(argmin(&a), 0);
         assert_eq!(argmax(&a), 2);
+    }
+
+    #[test]
+    fn test_median_and_cov() {
+        let a = array(vec![1.0, 3.0, 2.0, 4.0]);
+        assert_eq!(median(&a), 2.5);
+
+        let m = array(vec![
+            vec![1.0, 2.0, 3.0],
+            vec![2.0, 4.0, 6.0]
+        ]);
+        let c = cov(&m).unwrap();
+        assert_eq!(c.dim(), (2, 2));
+        assert!((c[[0, 0]] - 1.0).abs() < 1e-9);
+        assert!((c[[0, 1]] - 2.0).abs() < 1e-9);
+        assert!((c[[1, 1]] - 4.0).abs() < 1e-9);
     }
 }
 
