@@ -1,5 +1,7 @@
 //! Shared utilities for `numpy_ml` models.
 
+pub mod kernels;
+
 /// Stable log-sum-exp of a slice of log probabilities.
 pub fn logsumexp(log_probs: &[f64]) -> f64 {
     let max_val = log_probs.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
