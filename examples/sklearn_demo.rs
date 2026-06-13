@@ -2,7 +2,7 @@ use mlab_rs::np;
 use mlab_rs::sklearn::{
     cluster::KMeans,
     decomposition::PCA,
-    linear_model::{LinearRegression, LogisticRegression},
+    linear_model::{LinearRegression, LogisticRegression, Ridge},
     metrics::{accuracy_score, mean_squared_error, r2_score},
     model_selection::train_test_split,
     preprocessing::StandardScaler,
@@ -44,6 +44,18 @@ fn main() {
     println!("True test labels: {:?}", y_test);
     println!("MSE: {}", mean_squared_error(&y_test, &preds));
     println!("R2 Score: {}", r2_score(&y_test, &preds));
+    println!();
+
+    // Fit Ridge Regression
+    let mut ridge = Ridge::new(0.5, true);
+    ridge.fit(&x_train_scaled, &y_train).unwrap();
+
+    let ridge_preds = ridge.predict(&x_test_scaled);
+    println!("Ridge Regression coefficients: {:?}", ridge.coef);
+    println!("Ridge Regression intercept: {:?}", ridge.intercept);
+    println!("Ridge Predictions on test set: {:?}", ridge_preds);
+    println!("Ridge MSE: {}", mean_squared_error(&y_test, &ridge_preds));
+    println!("Ridge R2 Score: {}", r2_score(&y_test, &ridge_preds));
     println!();
 
     // 2. Logistic Regression

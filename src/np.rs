@@ -144,38 +144,11 @@ where
     Array1::from_shape_fn(num, |i| start + T::from_usize(i).unwrap() * step)
 }
 
-/// Random module containing normal and uniform distributions.
-pub mod random {
-    use super::*;
-    use rand::prelude::*;
-    use rand_distr::{StandardNormal, Uniform};
+pub mod random;
 
-    pub fn rand<Sh>(shape: Sh) -> Array<f64, Sh::Dim>
-    where
-        Sh: ndarray::ShapeBuilder,
-    {
-        let mut rng = rand::thread_rng();
-        let dist = Uniform::new(0.0, 1.0);
-        Array::from_shape_simple_fn(shape, || dist.sample(&mut rng))
-    }
+#[cfg(feature = "sp")]
+pub use crate::sp::linalg;
 
-    pub fn randn<Sh>(shape: Sh) -> Array<f64, Sh::Dim>
-    where
-        Sh: ndarray::ShapeBuilder,
-    {
-        let mut rng = rand::thread_rng();
-        Array::from_shape_simple_fn(shape, || rng.sample(StandardNormal))
-    }
-
-    pub fn randint<Sh>(low: i32, high: i32, shape: Sh) -> Array<i32, Sh::Dim>
-    where
-        Sh: ndarray::ShapeBuilder,
-    {
-        let mut rng = rand::thread_rng();
-        let dist = Uniform::new(low, high);
-        Array::from_shape_simple_fn(shape, || dist.sample(&mut rng))
-    }
-}
 
 // Element-wise Math
 
