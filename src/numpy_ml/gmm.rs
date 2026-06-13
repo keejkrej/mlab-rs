@@ -175,7 +175,7 @@ impl GMM {
                 denom_vals.push(log_p_x_i + log_pi_c);
             }
 
-            let log_denom = logsumexp(&denom_vals);
+            let log_denom = crate::numpy_ml::utils::logsumexp(&denom_vals);
             for j in 0..c {
                 q[[i, j]] = (denom_vals[j] - log_denom).exp();
             }
@@ -246,12 +246,6 @@ impl GMM {
 
         Ok(())
     }
-}
-
-fn logsumexp(log_probs: &[f64]) -> f64 {
-    let max_val = log_probs.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let sum_exp: f64 = log_probs.iter().map(|&p| (p - max_val).exp()).sum();
-    max_val + sum_exp.ln()
 }
 
 fn log_gaussian_pdf(x: &Array1<f64>, mu: &Array1<f64>, sigma: &Array2<f64>) -> Result<f64, String> {

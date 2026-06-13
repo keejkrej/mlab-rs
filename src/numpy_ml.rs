@@ -1,16 +1,21 @@
 pub mod linear_models;
 pub mod gmm;
 pub mod factorization;
+pub mod utils;
+pub mod hmm;
+pub mod lda;
 
 #[cfg(test)]
 mod tests {
     use super::factorization::{NMF, VanillaALS};
     use super::gmm::GMM;
+    use super::hmm::MultinomialHMM;
+    use super::lda::LDA;
     use super::linear_models::{
         BayesianLinearRegressionKnownVariance, BayesianLinearRegressionUnknownVariance,
         GeneralizedLinearModel,
     };
-    use ndarray::array;
+    use ndarray::{array, Array2};
 
     #[test]
     fn test_bayesian_linear_regression_known_variance() {
@@ -114,5 +119,76 @@ mod tests {
         let x_hat = w.dot(h);
         let mse = (&x - &x_hat).iter().map(|&v| v * v).sum::<f64>() / x.len() as f64;
         assert!(mse < 1.0, "NMF reconstruction MSE too high: {}", mse);
+    }
+
+    #[test]
+    fn test_hmm_decode() {
+        // 2 states, 2 observations
+        // State 0 mostly emits 0, state 1 mostly emits 1
+        let a = array![[0.9, 0.1], [0.1, 0.9]];
+        let b = array![[0.9, 0.1], [0.1, 0.9]];
+        let pi = array![0.9, 0.1];
+
+        let hmm = MultinomialHMM::new(Some(a), Some(b), Some(pi), None);
+        let obs = Array2::from_shape_vec((1, 5), vec![0, 0, 1, 1, 1]).unwrap();
+
+        let (path, log_prob) = hmm.decode(&obs).unwrap();
+        assert_eq!(path, vec![0, 0, 1, 1, 1]);
+        assert!(log_prob < 0.0);
+    }
+
+    #[test]
+    fn test_hmm_log_likelihood() {
+        let a = array![[0.9, 0.1], [0.1, 0.9]];
+        let b = array![[0.9, 0.1], [0.1, 0.9]];
+        let pi = array![0.5, 0.5];
+
+        let hmm = MultinomialHMM::new(Some(a), Some(b), Some(pi), None);
+        let obs = Array2::from_shape_vec((1, 3), vec![0, 0, 0]).unwrap();
+
+        let ll = hmm.log_likelihood(&obs).unwrap();
+        assert!(ll < 0.0);
+    }
+
+    #[test]
+    fn test_hmm_fit() {
+        // Simple 2-state, 2-observation HMM
+        let a = array![[0.9, 0.1], [0.1, 0.9]];
+        let b = array![[0.9, 0.1], [0.1, 0.9]];
+        let pi = array![0.9, 0.1];
+
+        let mut hmm = MultinomialHMM::new(Some(a.clone()), Some(b.clone()), Some(pi.clone()), None);
+        let obs = Array2::from_shape_vec((1, 20), vec![0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1]).unwrap();
+
+        let ll_before = hmm.log_likelihood(&obs).unwrap();
+        hmm.fit(&obs, 2, 2, None, 1e-5, false).unwrap();
+        let ll_after = hmm.log_likelihood(&obs).unwrap();
+
+        assert!(ll_after >= ll_before || (ll_after - ll_before).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_lda_train() {
+        // Toy corpus: 4 documents over 6 word tokens, 2 topics
+        let corpus = vec![
+            vec![0, 1, 2, 0, 1],
+            vec![0, 1, 0, 2],
+            vec![3, 4, 5, 3],
+            vec![4, 5, 4, 3, 5],
+        ];
+
+        let mut lda = LDA::new(2);
+        lda.train(corpus, false, 50, 0.1);
+
+        let beta = lda.beta.as_ref().unwrap();
+        // beta columns should sum to 1
+        for topic in 0..2 {
+            let col_sum: f64 = beta.column(topic).iter().sum();
+            assert!((col_sum - 1.0).abs() < 1e-6);
+        }
+
+        // gamma should be positive
+        let gamma = lda.gamma.as_ref().unwrap();
+        assert!(gamma.iter().all(|&v| v > 0.0));
     }
 }

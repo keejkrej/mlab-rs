@@ -10,6 +10,7 @@ rand = "0.8.5"
 rand_distr = "0.4.3"
 nalgebra = { version = "0.33.0" }
 rustfft = "6.2.0"
+special = "0.13"
 image = { version = "0.25.1", optional = true }
 imageproc = { version = "0.25.0", optional = true }
 
