@@ -9,3 +9,5 @@ pub mod sklearn;
 
 #[cfg(feature = "skimage")]
 pub mod skimage;
+
+pub mod numpy_ml;

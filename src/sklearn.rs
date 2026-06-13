@@ -154,4 +154,43 @@ mod tests {
         assert_eq!(preds[0], 0.0);
         assert_eq!(preds[1], 1.0);
     }
+
+    #[test]
+    fn test_bayesian_linear_regression_known_variance() {
+        let x = array![[1.0], [2.0], [3.0], [4.0]];
+        let y = array![3.0, 5.0, 7.0, 9.0];
+        let mut model = linear_model::BayesianLinearRegressionKnownVariance::new(0.0, 1.0, None, true);
+
+        model.fit(&x, &y).unwrap();
+        let pred = model.predict(&array![[5.0]]);
+
+        assert_eq!(pred.len(), 1);
+        assert!(pred[0] > 10.0);
+    }
+
+    #[test]
+    fn test_bayesian_linear_regression_unknown_variance() {
+        let x = array![[1.0], [2.0], [3.0], [4.0]];
+        let y = array![3.0, 5.0, 7.0, 9.0];
+        let mut model = linear_model::BayesianLinearRegressionUnknownVariance::new(1.0, 1.0, 0.0, None, true);
+
+        model.fit(&x, &y).unwrap();
+        let pred = model.predict(&array![[5.0]]);
+
+        assert_eq!(pred.len(), 1);
+        assert!(pred[0] > 10.0);
+    }
+
+    #[test]
+    fn test_generalized_linear_model_identity_link() {
+        let x = array![[0.0], [1.0], [2.0], [3.0]];
+        let y = array![1.0, 2.0, 3.0, 4.0];
+        let mut model = linear_model::GeneralizedLinearModel::new("identity", true, 1e-6, 25);
+
+        model.fit(&x, &y).unwrap();
+        let pred = model.predict(&array![[4.0]]);
+
+        assert_eq!(pred.len(), 1);
+        assert!((pred[0] - 5.0).abs() < 0.2);
+    }
 }
