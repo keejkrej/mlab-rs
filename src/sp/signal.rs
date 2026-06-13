@@ -81,3 +81,102 @@ pub fn lfilter(b: &Array1<f64>, a: &Array1<f64>, x: &Array1<f64>) -> Result<Arra
     Ok(y)
 }
 
+/// Zero-phase forward-backward digital filter.
+pub fn filtfilt(b: &Array1<f64>, a: &Array1<f64>, x: &Array1<f64>) -> Result<Array1<f64>, String> {
+    let padlen = 3 * std::cmp::max(b.len(), a.len());
+    if x.len() <= padlen {
+        return Err("Input signal is too short for the requested padlen".to_string());
+    }
+
+    // Construct padded signal with reflection padding
+    let mut padded_vec = Vec::with_capacity(x.len() + 2 * padlen);
+
+    let x0 = x[0];
+    for i in (1..=padlen).rev() {
+        padded_vec.push(2.0 * x0 - x[i]);
+    }
+
+    for &val in x.iter() {
+        padded_vec.push(val);
+    }
+
+    let xn = x[x.len() - 1];
+    let n = x.len();
+    for i in 1..=padlen {
+        padded_vec.push(2.0 * xn - x[n - 1 - i]);
+    }
+
+    let padded = Array1::from_vec(padded_vec);
+
+    // Forward filter
+    let y1 = lfilter(b, a, &padded)?;
+
+    // Reverse y1
+    let mut y1_rev = y1.to_vec();
+    y1_rev.reverse();
+    let y1_rev_arr = Array1::from_vec(y1_rev);
+
+    // Backward filter
+    let y2 = lfilter(b, a, &y1_rev_arr)?;
+
+    // Reverse y2 back
+    let mut y2_rev = y2.to_vec();
+    y2_rev.reverse();
+
+    // Crop the padded boundaries
+    let start_idx = padlen;
+    let end_idx = padlen + x.len();
+    let cropped = y2_rev[start_idx..end_idx].to_vec();
+
+    Ok(Array1::from_vec(cropped))
+}
+
+/// Find local peaks (maxima) in a 1D signal.
+pub fn find_peaks(
+    x: &Array1<f64>,
+    height: Option<f64>,
+    distance: Option<usize>,
+) -> Vec<usize> {
+    let n = x.len();
+    if n < 3 {
+        return vec![];
+    }
+
+    let mut peaks = Vec::new();
+    for i in 1..(n - 1) {
+        if x[i] > x[i - 1] && x[i] > x[i + 1] {
+            if let Some(h) = height {
+                if x[i] < h {
+                    continue;
+                }
+            }
+            peaks.push(i);
+        }
+    }
+
+    if let Some(dist) = distance {
+        let mut kept = Vec::new();
+        // Sort peaks by height descending
+        let mut peak_heights: Vec<(usize, f64)> = peaks.iter().map(|&idx| (idx, x[idx])).collect();
+        peak_heights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+
+        for (idx, _h) in peak_heights {
+            let mut ok = true;
+            for &k_idx in &kept {
+                let diff = if idx > k_idx { idx - k_idx } else { k_idx - idx };
+                if diff < dist {
+                    ok = false;
+                    break;
+                }
+            }
+            if ok {
+                kept.push(idx);
+            }
+        }
+        kept.sort();
+        peaks = kept;
+    }
+
+    peaks
+}
+

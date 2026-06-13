@@ -102,3 +102,22 @@ pub fn spearmanr(x: &Array1<f64>, y: &Array1<f64>) -> Result<(f64, f64), String>
     let ry = rankdata(y);
     pearsonr(&rx, &ry)
 }
+
+/// Compute standard score (z-score) of each value in the sample.
+pub fn zscore(arr: &Array1<f64>, ddof: f64) -> Array1<f64> {
+    let n = arr.len();
+    if n == 0 {
+        return Array1::zeros(0);
+    }
+    let mean = arr.mean().unwrap_or(0.0);
+
+    let mut sum_sq = 0.0;
+    for &val in arr.iter() {
+        sum_sq += (val - mean).powi(2);
+    }
+    let div = (n as f64) - ddof;
+    let variance = if div > 0.0 { sum_sq / div } else { 0.0 };
+    let std = if variance > 1e-14 { variance.sqrt() } else { 1.0 };
+
+    arr.mapv(|val| (val - mean) / std)
+}

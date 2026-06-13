@@ -39,4 +39,27 @@ fn main() {
         vec![2.0, 4.0, 6.0]
     ]);
     println!("cov(m):\n{:?}", np::cov(&m).unwrap());
+    println!();
+
+    // Python: clipped = np.clip(a, 2.0, 4.0)
+    let vals = np::array(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+    let clipped = np::clip(&vals, 2.0, 4.0);
+    println!("clip([1,2,3,4,5], 2, 4): {:?}", clipped);
+
+    // Python: result = np.where(cond, x, y)
+    let cond = np::array(vec![true, false, true, false]);
+    let x_w = np::array(vec![10.0, 20.0, 30.0, 40.0]);
+    let y_w = np::array(vec![1.0, 2.0, 3.0, 4.0]);
+    let w = np::where_arr(&cond, &x_w, &y_w);
+    println!("where([T,F,T,F], x, y): {:?}", w);
+
+    // Python: np.unique(arr)
+    let dup = np::array(vec![3.0, 1.0, 2.0, 1.0, 3.0, 2.0]);
+    println!("unique([3,1,2,1,3,2]): {:?}", np::unique(&dup));
+
+    // Python: np.percentile(arr, 25)
+    let p_arr = np::array(vec![10.0, 20.0, 30.0, 40.0, 50.0]);
+    println!("percentile([10..50], 25): {}", np::percentile(&p_arr, 25.0));
+    println!("percentile([10..50], 50): {}", np::percentile(&p_arr, 50.0));
+    println!("percentile([10..50], 75): {}", np::percentile(&p_arr, 75.0));
 }

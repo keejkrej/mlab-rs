@@ -398,6 +398,81 @@ pub fn cov(m: &Array2<f64>) -> Result<Array2<f64>, String> {
     Ok(cov_matrix)
 }
 
+/// Clip (limit) the values in an array.
+pub fn clip<T, D>(arr: &Array<T, D>, min: T, max: T) -> Array<T, D>
+where
+    T: Clone + PartialOrd,
+    D: Dimension,
+{
+    arr.mapv(|val| {
+        if val < min {
+            min.clone()
+        } else if val > max {
+            max.clone()
+        } else {
+            val
+        }
+    })
+}
+
+/// Return elements chosen from x or y depending on condition.
+pub fn where_arr<T, D>(cond: &Array<bool, D>, x: &Array<T, D>, y: &Array<T, D>) -> Array<T, D>
+where
+    T: Clone,
+    D: Dimension,
+{
+    assert_eq!(cond.shape(), x.shape(), "Condition and x must have the same shape");
+    assert_eq!(cond.shape(), y.shape(), "Condition and y must have the same shape");
+    let flat_vec: Vec<T> = cond
+        .iter()
+        .zip(x.iter())
+        .zip(y.iter())
+        .map(|((&c, vx), vy)| if c { vx.clone() } else { vy.clone() })
+        .collect();
+    Array::from_shape_vec(x.raw_dim(), flat_vec).unwrap()
+}
+
+/// Find the unique elements of an array.
+pub fn unique<T>(arr: &Array1<T>) -> Array1<T>
+where
+    T: Clone + PartialOrd,
+{
+    let mut vec = arr.to_vec();
+    vec.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    vec.dedup_by(|a, b| {
+        let ar: &T = a;
+        let br: &T = b;
+        ar.partial_cmp(br).unwrap_or(std::cmp::Ordering::Equal) == std::cmp::Ordering::Equal
+    });
+    Array1::from_vec(vec)
+}
+
+/// Compute the q-th percentile of the data.
+/// q must be in range [0.0, 100.0].
+pub fn percentile(arr: &Array1<f64>, q: f64) -> f64 {
+    assert!((0.0..=100.0).contains(&q), "q must be between 0.0 and 100.0");
+    let n = arr.len();
+    if n == 0 {
+        return f64::NAN;
+    }
+    let mut sorted = arr.to_vec();
+    sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+
+    if n == 1 {
+        return sorted[0];
+    }
+
+    let idx = (q / 100.0) * ((n - 1) as f64);
+    let low = idx.floor() as usize;
+    let high = idx.ceil() as usize;
+    if low == high {
+        sorted[low]
+    } else {
+        let weight = idx - (low as f64);
+        sorted[low] * (1.0 - weight) + sorted[high] * weight
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -461,6 +536,28 @@ mod tests {
         assert!((c[[0, 0]] - 1.0).abs() < 1e-9);
         assert!((c[[0, 1]] - 2.0).abs() < 1e-9);
         assert!((c[[1, 1]] - 4.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_clip_where_unique_percentile() {
+        let a = array(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let clipped = clip(&a, 2.0, 4.0);
+        assert_eq!(clipped, array(vec![2.0, 2.0, 3.0, 4.0, 4.0]));
+
+        let cond = array(vec![true, false, true, false, true]);
+        let x = array(vec![10.0, 20.0, 30.0, 40.0, 50.0]);
+        let y = array(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        let w = where_arr(&cond, &x, &y);
+        assert_eq!(w, array(vec![10.0, 2.0, 30.0, 4.0, 50.0]));
+
+        let u_arr = array(vec![3.0, 1.0, 2.0, 1.0, 3.0]);
+        let u = unique(&u_arr);
+        assert_eq!(u, array(vec![1.0, 2.0, 3.0]));
+
+        let p_arr = array(vec![1.0, 2.0, 3.0, 4.0, 5.0]);
+        assert_eq!(percentile(&p_arr, 50.0), 3.0);
+        assert_eq!(percentile(&p_arr, 25.0), 2.0);
+        assert_eq!(percentile(&p_arr, 75.0), 4.0);
     }
 }
 

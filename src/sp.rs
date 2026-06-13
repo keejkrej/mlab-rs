@@ -54,6 +54,12 @@ mod tests {
         let (sr, sp_val) = stats::spearmanr(&x, &y).unwrap();
         assert!((sr - 1.0).abs() < 1e-9);
         assert!(sp_val < 0.05);
+
+        // test zscore
+        let z = stats::zscore(&x, 0.0);
+        assert!((z[0] - (-1.41421356)).abs() < 1e-6);
+        assert!((z[2] - 0.0).abs() < 1e-6);
+        assert!((z[4] - 1.41421356).abs() < 1e-6);
     }
 
     #[test]
@@ -76,6 +82,24 @@ mod tests {
         assert_eq!(y.len(), 3);
         assert!((y[0] - 1.0).abs() < 1e-9);
         assert!((y[1] - 2.7).abs() < 1e-9);
+
+        // test filtfilt
+        let b2 = Array1::from_vec(vec![1.0, 0.5]);
+        let a2 = Array1::from_vec(vec![1.0, -0.2]);
+        let x2 = Array1::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let y_ff = signal::filtfilt(&b2, &a2, &x2).unwrap();
+        assert_eq!(y_ff.len(), 10);
+
+        // test find_peaks
+        let peak_sig = Array1::from_vec(vec![0.0, 1.0, 0.0, 2.0, 0.0, 3.0, 0.0]);
+        let peaks = signal::find_peaks(&peak_sig, None, None);
+        assert_eq!(peaks, vec![1, 3, 5]);
+
+        let peaks_h = signal::find_peaks(&peak_sig, Some(1.5), None);
+        assert_eq!(peaks_h, vec![3, 5]);
+
+        let peaks_d = signal::find_peaks(&peak_sig, None, Some(3));
+        assert_eq!(peaks_d, vec![1, 5]);
     }
 
     #[test]
