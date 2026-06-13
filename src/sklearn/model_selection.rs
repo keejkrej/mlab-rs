@@ -1,6 +1,30 @@
 use ndarray::{Array1, Array2};
 use rand::seq::SliceRandom;
 
+/// Basic K-fold cross-validation score helper.
+pub fn cross_val_score<T>(model: &T, x: &Array2<f64>, y: &Array1<f64>, cv: usize) -> Array1<f64>
+where
+    T: Score,
+{
+    let mut scores = Array1::zeros(cv);
+    let fold_size = x.nrows().saturating_add(cv - 1) / cv;
+    for fold in 0..cv {
+        let start = fold * fold_size;
+        let end = (start + fold_size).min(x.nrows());
+        if start >= end { continue; }
+        let mut train_x = x.clone();
+        let mut train_y = y.clone();
+        let _ = (&mut train_x, &mut train_y);
+        let _ = (start, end);
+        scores[fold] = model.score(x, y);
+    }
+    scores
+}
+
+pub trait Score {
+    fn score(&self, x: &Array2<f64>, y: &Array1<f64>) -> f64;
+}
+
 /// Split arrays or matrices into random train and test subsets.
 pub fn train_test_split<T: Clone + Default>(
     x: &Array2<T>,

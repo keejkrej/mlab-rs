@@ -147,7 +147,27 @@ where
 pub mod random;
 
 #[cfg(feature = "sp")]
-pub use crate::sp::linalg;
+pub mod linalg {
+    pub use crate::sp::linalg::*;
+
+    use ndarray::{ArrayBase, Data, Dimension};
+
+    /// Vector/matrix norm helper for L1/L2/Frobenius-like norms.
+    pub fn rsnorm<S, D>(arr: &ArrayBase<S, D>, ord: Option<usize>) -> f64
+    where
+        S: Data<Elem = f64>,
+        D: Dimension,
+    {
+        let ord = ord.unwrap_or(2);
+        let values: Vec<f64> = arr.iter().copied().collect();
+        match ord {
+            0 => values.iter().filter(|&&v| v.abs() > 0.0).count() as f64,
+            1 => values.iter().map(|v| v.abs()).sum(),
+            2 => values.iter().map(|v| v * v).sum::<f64>().sqrt(),
+            _ => values.iter().map(|v| v.abs()).fold(0.0, |a, b| if a > b { a } else { b }),
+        }
+    }
+}
 
 
 // Element-wise Math
@@ -361,6 +381,100 @@ where
     a.dot(b)
 }
 
+/// Cross product of two 3-element vectors.
+pub fn cross(a: &Array1<f64>, b: &Array1<f64>) -> Array1<f64> {
+    assert_eq!(a.len(), 3, "Cross product expects 3-element vectors");
+    assert_eq!(b.len(), 3, "Cross product expects 3-element vectors");
+    Array1::from_vec(vec![
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ])
+}
+
+/// Return a sorted copy of an array.
+pub fn rssort<T>(arr: &Array1<T>) -> Array1<T>
+where
+    T: Clone + PartialOrd,
+{
+    let mut values = arr.to_vec();
+    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    Array1::from_vec(values)
+}
+
+/// Return the indices that would sort an array.
+pub fn argsort<T>(arr: &Array1<T>) -> Array1<usize>
+where
+    T: PartialOrd,
+{
+    let mut indices: Vec<usize> = (0..arr.len()).collect();
+    indices.sort_by(|&a, &b| arr[a].partial_cmp(&arr[b]).unwrap_or(std::cmp::Ordering::Equal));
+    Array1::from_vec(indices)
+}
+
+/// Compute the cumulative sum along a 1D array.
+pub fn cumsum<T>(arr: &Array1<T>) -> Array1<T>
+where
+    T: Clone + num_traits::Zero + std::ops::Add<Output = T>,
+{
+    let mut out = Vec::with_capacity(arr.len());
+    let mut running = T::zero();
+    for value in arr.iter().cloned() {
+        running = running + value;
+        out.push(running.clone());
+    }
+    Array1::from_vec(out)
+}
+
+/// Compute the n-th discrete difference along a 1D array.
+pub fn diff<T>(arr: &Array1<T>, n: usize) -> Array1<T>
+where
+    T: Clone + std::ops::Sub<Output = T>,
+{
+    if n == 0 || arr.len() <= 1 {
+        return arr.clone();
+    }
+
+    let mut values = arr.to_vec();
+    for _ in 0..n {
+        if values.len() < 2 {
+            return Array1::from_vec(Vec::new());
+        }
+        let mut next = Vec::with_capacity(values.len() - 1);
+        for i in 1..values.len() {
+            next.push(values[i].clone() - values[i - 1].clone());
+        }
+        values = next;
+    }
+    Array1::from_vec(values)
+}
+
+/// Repeat an array reps times.
+pub fn tile<T>(arr: &Array1<T>, reps: usize) -> Array1<T>
+where
+    T: Clone,
+{
+    let mut out = Vec::with_capacity(arr.len() * reps);
+    for _ in 0..reps {
+        out.extend_from_slice(&arr.to_vec());
+    }
+    Array1::from_vec(out)
+}
+
+/// Repeat each element of an array n times.
+pub fn repeat<T>(arr: &Array1<T>, n: usize) -> Array1<T>
+where
+    T: Clone,
+{
+    let mut out = Vec::with_capacity(arr.len() * n);
+    for value in arr.iter().cloned() {
+        for _ in 0..n {
+            out.push(value.clone());
+        }
+    }
+    Array1::from_vec(out)
+}
+
 /// Compute the median along a 1D array.
 pub fn median(arr: &Array1<f64>) -> f64 {
     let n = arr.len();
@@ -536,6 +650,19 @@ mod tests {
         assert!((c[[0, 0]] - 1.0).abs() < 1e-9);
         assert!((c[[0, 1]] - 2.0).abs() < 1e-9);
         assert!((c[[1, 1]] - 4.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_numpy_helpers_round_trip() {
+        let arr = array(vec![3.0, 1.0, 2.0]);
+        assert_eq!(rssort(&arr), array(vec![1.0, 2.0, 3.0]));
+        assert_eq!(argsort(&arr), array(vec![1, 2, 0]));
+        assert_eq!(cumsum(&arr), array(vec![3.0, 4.0, 6.0]));
+        assert_eq!(diff(&arr, 1), array(vec![-2.0, 1.0]));
+        assert_eq!(tile(&array(vec![1.0, 2.0]), 2), array(vec![1.0, 2.0, 1.0, 2.0]));
+        assert_eq!(repeat(&array(vec![1.0, 2.0]), 2), array(vec![1.0, 1.0, 2.0, 2.0]));
+        assert!((linalg::rsnorm(&array(vec![3.0, 4.0]), Some(2)) - 5.0).abs() < 1e-9);
+        assert_eq!(cross(&array(vec![1.0, 0.0, 0.0]), &array(vec![0.0, 1.0, 0.0])), array(vec![0.0, 0.0, 1.0]));
     }
 
     #[test]

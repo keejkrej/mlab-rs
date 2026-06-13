@@ -6,6 +6,8 @@ pub mod metrics;
 pub mod model_selection;
 pub mod tree;
 pub mod naive_bayes;
+pub mod ensemble;
+pub mod neighbors;
 
 #[cfg(test)]
 mod tests {

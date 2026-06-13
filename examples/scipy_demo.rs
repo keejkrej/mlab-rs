@@ -85,4 +85,12 @@ fn main() {
     println!("find_peaks (height>=1.5): {:?}", peaks_h);
     let peaks_d = sp::signal::find_peaks(&peak_sig, None, Some(3));
     println!("find_peaks (distance>=3): {:?}", peaks_d);
+
+    println!("rsminimize_scalar: {}", sp::optimize::rsminimize_scalar(|x| (x - 2.0).powi(2), (0.0, 4.0), 1e-4));
+    let fit = sp::optimize::curve_fit(|params, x| params[0] * x + params[1], &np::array(vec![0.0, 1.0, 2.0]), &np::array(vec![1.0, 3.0, 5.0]), &np::array(vec![1.0, 1.0])).unwrap();
+    println!("curve_fit params: {:?}", fit);
+    let xa = np::array(vec![vec![0.0, 0.0], vec![1.0, 1.0]]);
+    let xb = np::array(vec![vec![0.0, 1.0], vec![1.0, 0.0]]);
+    println!("rscdist: {:?}", sp::spatial::rscdist(&xa, &xb, "euclidean"));
+    println!("rsuniform_filter1d: {:?}", sp::ndimage::rsuniform_filter1d(&np::array(vec![1.0, 2.0, 3.0, 4.0]), 2));
 }

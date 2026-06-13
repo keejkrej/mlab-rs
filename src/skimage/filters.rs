@@ -1,6 +1,41 @@
 use ndarray::Array2;
 use image::{GrayImage, Luma};
 
+/// Compute Otsu's optimal threshold for a grayscale image.
+pub fn threshold_otsu(image: &Array2<u8>) -> f64 {
+    let (height, width) = image.dim();
+    let total = (height * width) as usize;
+    let mut hist = [0usize; 256];
+    for y in 0..height {
+        for x in 0..width {
+            hist[image[[y, x]] as usize] += 1;
+        }
+    }
+    let mut sum = 0.0;
+    for i in 0..256 {
+        sum += i as f64 * hist[i] as f64;
+    }
+    let mut sum_b = 0.0;
+    let mut w_b = 0.0;
+    let mut max_var = 0.0;
+    let mut threshold = 0.0;
+    for i in 0..256 {
+        w_b += hist[i] as f64;
+        if w_b <= 0.0 || w_b >= total as f64 { continue; }
+        let w_f = total as f64 - w_b;
+        if w_f <= 0.0 { break; }
+        sum_b += i as f64 * hist[i] as f64;
+        let m_b = sum_b / w_b;
+        let m_f = (sum - sum_b) / w_f;
+        let var_between = w_b * w_f * (m_b - m_f) * (m_b - m_f);
+        if var_between > max_var {
+            max_var = var_between;
+            threshold = i as f64;
+        }
+    }
+    threshold
+}
+
 /// Apply Gaussian blur to a grayscale image.
 pub fn gaussian(image: &Array2<u8>, sigma: f64) -> Array2<u8> {
     let (height, width) = image.dim();

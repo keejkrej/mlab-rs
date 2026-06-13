@@ -1,5 +1,34 @@
 use ndarray::{Array1, Array2, Axis};
 
+/// Encode target labels with 0..n_classes-1 values.
+pub struct LabelEncoder {
+    pub classes: Vec<f64>,
+}
+
+impl LabelEncoder {
+    pub fn new() -> Self { Self { classes: Vec::new() } }
+
+    pub fn fit(&mut self, y: &Array1<f64>) {
+        let mut classes = y.to_vec();
+        classes.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        classes.dedup();
+        self.classes = classes;
+    }
+
+    pub fn transform(&self, y: &Array1<f64>) -> Array1<usize> {
+        let mut out = Array1::zeros(y.len());
+        for (i, value) in y.iter().enumerate() {
+            out[i] = self.classes.iter().position(|&c| c == *value).unwrap_or(0);
+        }
+        out
+    }
+
+    pub fn fit_transform(&mut self, y: &Array1<f64>) -> Array1<usize> {
+        self.fit(y);
+        self.transform(y)
+    }
+}
+
 /// StandardScaler standardizes features by removing the mean and scaling to unit variance.
 pub struct StandardScaler {
     pub mean: Option<Array1<f64>>,
@@ -115,6 +144,21 @@ impl MinMaxScaler {
 /// OneHotEncoder encodes categorical features as a one-hot numeric array.
 pub struct OneHotEncoder {
     pub categories: Vec<Vec<f64>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ndarray::array;
+
+    #[test]
+    fn test_label_encoder() {
+        let y = array![2.0, 1.0, 2.0, 0.0];
+        let mut encoder = LabelEncoder::new();
+        let encoded = encoder.fit_transform(&y);
+        assert_eq!(encoded.to_vec(), vec![2, 1, 2, 0]);
+        assert_eq!(encoder.classes, vec![0.0, 1.0, 2.0]);
+    }
 }
 
 impl OneHotEncoder {

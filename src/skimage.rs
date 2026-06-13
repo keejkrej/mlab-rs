@@ -2,6 +2,8 @@ pub mod color;
 pub mod io;
 pub mod filters;
 pub mod transform;
+pub mod exposure;
+pub mod morphology;
 
 #[cfg(test)]
 mod tests {

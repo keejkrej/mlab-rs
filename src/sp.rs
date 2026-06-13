@@ -3,6 +3,9 @@ pub mod fft;
 pub mod stats;
 pub mod signal;
 pub mod interpolate;
+pub mod optimize;
+pub mod spatial;
+pub mod ndimage;
 
 #[cfg(test)]
 mod tests {

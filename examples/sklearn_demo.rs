@@ -1,12 +1,14 @@
 use mlab_rs::np;
 use mlab_rs::sklearn::{
     cluster::KMeans,
+    ensemble::RandomForestClassifier,
     decomposition::PCA,
     linear_model::{LinearRegression, LogisticRegression, Ridge},
-    metrics::{accuracy_score, mean_squared_error, r2_score},
-    model_selection::train_test_split,
+    metrics::{accuracy_score, classification_report, confusion_matrix, mean_squared_error, r2_score},
+    model_selection::{cross_val_score, train_test_split},
     naive_bayes::GaussianNB,
-    preprocessing::{StandardScaler, OneHotEncoder},
+    neighbors::KNeighborsClassifier,
+    preprocessing::{LabelEncoder, OneHotEncoder, StandardScaler},
     tree::DecisionTreeClassifier,
 };
 
@@ -137,7 +139,32 @@ fn main() {
     println!("Categories per column: {:?}", encoder.categories);
     println!();
 
-    // 7. Gaussian Naive Bayes Classifier
+    // 7. New helpers: KNN, Random Forest, metrics, cross_val_score, LabelEncoder
+    let mut knn = KNeighborsClassifier::new(1);
+    knn.fit(&np::array(vec![vec![0.0], vec![1.0], vec![2.0]]), &np::array(vec![0.0, 1.0, 1.0]));
+    println!("KNN prediction: {:?}", knn.predict(&np::array(vec![vec![0.9]])));
+
+    let mut rf = RandomForestClassifier::new(3);
+    rf.fit(&np::array(vec![vec![0.0], vec![1.0], vec![2.0], vec![3.0]]), &np::array(vec![0.0, 0.0, 1.0, 1.0]));
+    println!("RandomForest prediction: {:?}", rf.predict(&np::array(vec![vec![1.5]])));
+
+    let y_true = np::array(vec![0.0, 1.0, 1.0, 0.0]);
+    let y_pred = np::array(vec![0.0, 0.0, 1.0, 1.0]);
+    println!("Confusion matrix: {:?}", confusion_matrix(&y_true, &y_pred));
+    println!("Classification report: {:?}", classification_report(&y_true, &y_pred));
+
+    struct DummyScore;
+    impl mlab_rs::sklearn::model_selection::Score for DummyScore {
+        fn score(&self, _x: &mlab_rs::np::Array2<f64>, _y: &mlab_rs::np::Array1<f64>) -> f64 { 1.0 }
+    }
+    println!("Cross-val score: {:?}", cross_val_score(&DummyScore, &np::array(vec![vec![1.0], vec![2.0], vec![3.0], vec![4.0]]), &np::array(vec![0.0, 0.0, 1.0, 1.0]), 2));
+
+    let mut encoder = LabelEncoder::new();
+    let encoded = encoder.fit_transform(&np::array(vec![2.0, 1.0, 2.0, 0.0]));
+    println!("LabelEncoder classes: {:?}", encoder.classes);
+    println!("LabelEncoder encoded labels: {:?}", encoded);
+
+    // 8. Gaussian Naive Bayes Classifier
     let x_nb = np::array(vec![
         vec![1.0, 2.0],
         vec![1.2, 1.8],

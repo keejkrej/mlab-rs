@@ -1,5 +1,5 @@
 use mlab_rs::np;
-use mlab_rs::skimage::{color, filters, transform};
+use mlab_rs::skimage::{color, exposure, filters, morphology, transform};
 
 fn main() {
     println!("--- Scikit-Image Demo ---");
@@ -31,4 +31,11 @@ fn main() {
     // Python: resized = transform.resize(image, (8, 8))
     let resized = transform::resize(&image, (8, 8));
     println!("Resized image shape: {:?}", resized.dim());
+
+    let threshold = filters::threshold_otsu(&gray);
+    println!("Otsu threshold: {}", threshold);
+    println!("Equalized image shape: {:?}", exposure::equalize_hist(&gray).dim());
+    println!("Rescaled intensity sample: {:?}", exposure::rescale_intensity(&np::array(vec![vec![0.0, 1.0], vec![2.0, 3.0]]), (0.0, 3.0), (0.0, 1.0)));
+    println!("Binary erosion sample: {:?}", morphology::binary_erosion(&np::array(vec![vec![0, 1, 0], vec![1, 1, 1], vec![0, 1, 0]])));
+    println!("Rotated shape: {:?}", transform::rotate(&image, 45.0).dim());
 }

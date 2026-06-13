@@ -62,4 +62,14 @@ fn main() {
     println!("percentile([10..50], 25): {}", np::percentile(&p_arr, 25.0));
     println!("percentile([10..50], 50): {}", np::percentile(&p_arr, 50.0));
     println!("percentile([10..50], 75): {}", np::percentile(&p_arr, 75.0));
+
+    let sorted = np::rssort(&np::array(vec![3.0, 1.0, 2.0]));
+    println!("rssort([3,1,2]): {:?}", sorted);
+    println!("argsort([3,1,2]): {:?}", np::argsort(&np::array(vec![3.0, 1.0, 2.0])));
+    println!("cumsum([1,2,3]): {:?}", np::cumsum(&np::array(vec![1.0, 2.0, 3.0])));
+    println!("diff([5,9,7], 1): {:?}", np::diff(&np::array(vec![5.0, 9.0, 7.0]), 1));
+    println!("tile([1,2], 2): {:?}", np::tile(&np::array(vec![1.0, 2.0]), 2));
+    println!("repeat([1,2], 2): {:?}", np::repeat(&np::array(vec![1.0, 2.0]), 2));
+    println!("rsnorm([3,4]): {}", np::linalg::rsnorm(&np::array(vec![3.0, 4.0]), Some(2)));
+    println!("cross([1,0,0],[0,1,0]): {:?}", np::cross(&np::array(vec![1.0, 0.0, 0.0]), &np::array(vec![0.0, 1.0, 0.0])));
 }
