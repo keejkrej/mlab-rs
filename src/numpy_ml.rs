@@ -8,6 +8,7 @@ pub mod nonparametric;
 pub mod bandits;
 pub mod ngram;
 pub mod rl_models;
+pub mod neural_nets;
 
 #[cfg(test)]
 mod tests {
