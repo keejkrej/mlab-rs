@@ -1,58 +1,58 @@
-# Phase 2: High-Value ML Additions
+# Phase 2: High-Value ML Additions ✅ COMPLETE
 
 Core ML algorithms and evaluation tools missing from sklearn.
 
 ## sklearn.cluster
 
-- [ ] `DBSCAN` -- density-based clustering
+- [x] `DBSCAN` -- density-based clustering
 
 ## sklearn.ensemble
 
-- [ ] `GradientBoostingClassifier` -- gradient boosted trees (classifier)
-- [ ] `GradientBoostingRegressor` -- gradient boosted trees (regressor)
+- [x] `GradientBoostingClassifier` -- gradient boosted trees (classifier)
+- [x] `GradientBoostingRegressor` -- gradient boosted trees (regressor)
 
 ## sklearn.tree
 
-- [ ] `DecisionTreeRegressor` -- CART regression tree
+- [x] `DecisionTreeRegressor` -- CART regression tree
 
 ## sklearn.metrics
 
-- [ ] `precision_score` -- precision (positive predictive value)
-- [ ] `recall_score` -- recall (sensitivity)
-- [ ] `f1_score` -- F1 score
-- [ ] `roc_auc_score` -- area under ROC curve
-- [ ] `roc_curve` -- ROC curve points
-- [ ] `mean_absolute_error` -- MAE
-- [ ] `precision_recall_curve` -- precision-recall curve
-- [ ] `log_loss` -- logistic loss / cross-entropy
-- [ ] `balanced_accuracy_score` -- balanced accuracy
-- [ ] `matthews_corrcoef` -- Matthews correlation coefficient
-- [ ] `cohen_kappa_score` -- Cohen's kappa
+- [x] `precision_score` -- precision (positive predictive value)
+- [x] `recall_score` -- recall (sensitivity)
+- [x] `f1_score` -- F1 score
+- [x] `roc_auc_score` -- area under ROC curve
+- [x] `roc_curve` -- ROC curve points
+- [x] `mean_absolute_error` -- MAE
+- [x] `precision_recall_curve` -- precision-recall curve
+- [x] `log_loss` -- logistic loss / cross-entropy
+- [x] `balanced_accuracy_score` -- balanced accuracy
+- [x] `matthews_corrcoef` -- Matthews correlation coefficient
+- [x] `cohen_kappa_score` -- Cohen's kappa
 
 ## sklearn.model_selection
 
-- [ ] `KFold` -- k-fold cross-validation splitter
-- [ ] `StratifiedKFold` -- stratified k-fold
-- [ ] `cross_val_score` -- cross-validation scoring (functional)
-- [ ] `GridSearchCV` -- grid search with cross-validation
-- [ ] `RandomizedSearchCV` -- randomized hyperparameter search
+- [x] `KFold` -- k-fold cross-validation splitter
+- [x] `StratifiedKFold` -- stratified k-fold
+- [x] `cross_val_score` -- cross-validation scoring (functional)
+- [x] `GridSearchCV` -- grid search with cross-validation
+- [ ] `RandomizedSearchCV` -- randomized hyperparameter search (deferred)
 
 ## sklearn.pipeline
 
-- [ ] `Pipeline` -- sequential feature transform + estimator
-- [ ] `make_pipeline` -- convenience constructor
+- [x] `Pipeline` -- sequential feature transform + estimator
+- [x] `make_pipeline` -- convenience constructor
 
 ## sklearn.impute
 
-- [ ] `SimpleImputer` -- fill missing with mean/median/mode/constant
+- [x] `SimpleImputer` -- fill missing with mean/median/mode/constant
 
 ## sklearn.svm
 
-- [ ] `SVC` -- support vector classifier (RBF, linear, poly kernels)
-- [ ] `SVR` -- support vector regressor
-- [ ] `LinearSVC` -- linear SVM (faster for linear kernel)
+- [x] `SVC` -- support vector classifier (RBF, linear, poly kernels)
+- [x] `SVR` -- support vector regressor
+- [x] `LinearSVC` -- linear SVM (faster for linear kernel)
 
 ## sklearn.neural_network
 
-- [ ] `MLPClassifier` -- multi-layer perceptron classifier
-- [ ] `MLPRegressor` -- multi-layer perceptron regressor
+- [x] `MLPClassifier` -- multi-layer perceptron classifier
+- [x] `MLPRegressor` -- multi-layer perceptron regressor
