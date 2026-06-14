@@ -8,6 +8,10 @@ pub mod tree;
 pub mod naive_bayes;
 pub mod ensemble;
 pub mod neighbors;
+pub mod svm;
+pub mod neural_network;
+pub mod pipeline;
+pub mod impute;
 
 #[cfg(test)]
 mod tests {
@@ -192,5 +196,87 @@ mod tests {
 
         assert_eq!(pred.len(), 1);
         assert!((pred[0] - 5.0).abs() < 0.2);
+    }
+
+    #[test]
+    fn test_pipeline_standard_scaler_knn() {
+        use pipeline::{make_pipeline, StandardScalerWrapper};
+        use neighbors::KNeighborsClassifier;
+
+        let x_train = array![[0.0, 0.0], [1.0, 1.0], [10.0, 10.0], [11.0, 11.0]];
+        let y_train = array![0.0, 0.0, 1.0, 1.0];
+
+        let scaler = StandardScalerWrapper::new();
+        let mut pipe = make_pipeline(vec![Box::new(scaler)]);
+        let x_scaled = pipe.fit_transform(&x_train);
+
+        let mean = x_scaled.mean_axis(Axis(0)).unwrap();
+        assert!(mean[0].abs() < 1e-9);
+        assert!(mean[1].abs() < 1e-9);
+
+        let mut clf = KNeighborsClassifier::new(3);
+        clf.fit(&x_scaled, &y_train);
+        let x_test = pipe.transform(&array![[0.5, 0.5], [10.5, 10.5]]);
+        let preds = clf.predict(&x_test);
+        assert_eq!(preds[0], 0.0);
+        assert_eq!(preds[1], 1.0);
+    }
+
+    #[test]
+    fn test_simple_imputer_mean() {
+        use impute::SimpleImputer;
+        use ndarray::array;
+
+        let x = array![
+            [1.0, f64::NAN],
+            [2.0, 3.0],
+            [f64::NAN, 5.0],
+            [4.0, 7.0],
+        ];
+        let mut imputer = SimpleImputer::new("mean", 0.0);
+        let result = imputer.fit_transform(&x);
+
+        assert!((result[[0, 0]] - 1.0).abs() < 1e-9);
+        assert!((result[[0, 1]] - 5.0).abs() < 1e-9);
+        assert!((result[[1, 0]] - 2.0).abs() < 1e-9);
+        assert!((result[[1, 1]] - 3.0).abs() < 1e-9);
+        assert!((result[[2, 0]] - 7.0 / 3.0).abs() < 1e-9);
+        assert!((result[[2, 1]] - 5.0).abs() < 1e-9);
+        assert!((result[[3, 0]] - 4.0).abs() < 1e-9);
+        assert!((result[[3, 1]] - 7.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_dbscan_two_clusters() {
+        let x = array![
+            [0.0, 0.0],
+            [0.1, 0.1],
+            [0.2, 0.0],
+            [10.0, 10.0],
+            [10.1, 10.1],
+            [10.2, 10.0],
+        ];
+        let dbscan = cluster::DBSCAN::new(1.0, 2);
+        let labels = dbscan.fit_predict(&x);
+
+        assert_eq!(labels[0], labels[1]);
+        assert_eq!(labels[1], labels[2]);
+        assert_eq!(labels[3], labels[4]);
+        assert_eq!(labels[4], labels[5]);
+        assert_ne!(labels[0], labels[3]);
+    }
+
+    #[test]
+    fn test_dbscan_noise() {
+        let x = array![
+            [0.0, 0.0],
+            [0.1, 0.1],
+            [50.0, 50.0],
+        ];
+        let dbscan = cluster::DBSCAN::new(0.5, 2);
+        let labels = dbscan.fit_predict(&x);
+
+        assert_eq!(labels[0], labels[1]);
+        assert_eq!(labels[2], -1.0);
     }
 }

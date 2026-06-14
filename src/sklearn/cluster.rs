@@ -1,6 +1,82 @@
 use ndarray::{Array1, Array2};
 use rand::seq::SliceRandom;
 
+/// DBSCAN density-based clustering.
+pub struct DBSCAN {
+    pub eps: f64,
+    pub min_samples: usize,
+}
+
+impl DBSCAN {
+    pub fn new(eps: f64, min_samples: usize) -> Self {
+        Self { eps, min_samples }
+    }
+
+    pub fn fit_predict(&self, x: &Array2<f64>) -> Array1<f64> {
+        let nrows = x.nrows();
+        let ncols = x.ncols();
+        let eps_sq = self.eps * self.eps;
+
+        let mut neighbors: Vec<Vec<usize>> = Vec::with_capacity(nrows);
+        for i in 0..nrows {
+            let mut nbrs = Vec::new();
+            for j in 0..nrows {
+                if i == j {
+                    continue;
+                }
+                let mut dist_sq = 0.0;
+                for c in 0..ncols {
+                    dist_sq += (x[[i, c]] - x[[j, c]]).powi(2);
+                }
+                if dist_sq <= eps_sq {
+                    nbrs.push(j);
+                }
+            }
+            neighbors.push(nbrs);
+        }
+
+        let mut labels = Array1::from_elem(nrows, -1.0f64);
+        let mut visited = vec![false; nrows];
+        let mut cluster_id = 0.0f64;
+
+        for i in 0..nrows {
+            if visited[i] {
+                continue;
+            }
+            visited[i] = true;
+
+            if neighbors[i].len() < self.min_samples {
+                continue;
+            }
+
+            labels[i] = cluster_id;
+            let mut seed_set: Vec<usize> = neighbors[i].clone();
+            let mut idx = 0;
+            while idx < seed_set.len() {
+                let q = seed_set[idx];
+                if !visited[q] {
+                    visited[q] = true;
+                    if neighbors[q].len() >= self.min_samples {
+                        for &nbr in &neighbors[q] {
+                            if !seed_set.contains(&nbr) {
+                                seed_set.push(nbr);
+                            }
+                        }
+                    }
+                }
+                if labels[q] < 0.0 {
+                    labels[q] = cluster_id;
+                }
+                idx += 1;
+            }
+
+            cluster_id += 1.0;
+        }
+
+        labels
+    }
+}
+
 /// K-Means clustering.
 pub struct KMeans {
     pub n_clusters: usize,
