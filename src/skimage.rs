@@ -4,6 +4,8 @@ pub mod filters;
 pub mod transform;
 pub mod exposure;
 pub mod morphology;
+pub mod measure;
+pub mod metrics;
 
 #[cfg(test)]
 mod tests {
