@@ -6,6 +6,7 @@ pub mod interpolate;
 pub mod optimize;
 pub mod spatial;
 pub mod ndimage;
+pub mod special;
 
 #[cfg(test)]
 mod tests {
